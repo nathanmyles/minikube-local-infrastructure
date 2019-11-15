@@ -2,13 +2,13 @@
 
 set -e
 
-read -p "Secret name [regcred]: " name
+read -r -p "Secret name [regcred]: " name
 name="${name:-regcred}"
-read -p "Registry URL: " registry_url
-read -p "Email: " email
-read -p "Username [${email}]: " username
+read -r -p "Registry URL: " registry_url
+read -r -p "Email: " email
+read -r -p "Username [${email}]: " username
 username="${username:-${email}}"
-read -p "Password: " -s password
+read -r -p "Password: " -s password
 
 echo "
 kubectl create secret docker-registry ${name}
