@@ -6,7 +6,7 @@ metadata:
     app: zookeeper
 spec:
   serviceName: zookeeper
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: zookeeper
@@ -51,10 +51,10 @@ spec:
             value: "3888"
           - name: ZOOKEEPER_SERVER_1
             value: "zookeeper-0.zookeeper-headless.default.svc.cluster.local:2888:3888"
-          - name: ZOOKEEPER_SERVER_2
-            value: "zookeeper-1.zookeeper-headless.default.svc.cluster.local:2888:3888"
-          - name: ZOOKEEPER_SERVER_3
-            value: "zookeeper-2.zookeeper-headless.default.svc.cluster.local:2888:3888"
+#          - name: ZOOKEEPER_SERVER_2
+#            value: "zookeeper-1.zookeeper-headless.default.svc.cluster.local:2888:3888"
+#          - name: ZOOKEEPER_SERVER_3
+#            value: "zookeeper-2.zookeeper-headless.default.svc.cluster.local:2888:3888"
           - name: ZOOKEEPER_DATA_DIR
             value: "/var/lib/zookeeper/data"
           - name: ZOOKEEPER_DATA_LOG_DIR
