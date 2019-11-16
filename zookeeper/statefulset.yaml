@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper
+  labels:
+    app: zookeeper
+spec:
+  serviceName: zookeeper
+  replicas: 3
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      terminationGracePeriodSeconds: 1800
+      containers:
+      - name: zookeeper
+        image: confluentinc/cp-zookeeper:5.3.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 2181
+          name: client
+        - containerPort: 2888
+          name: server
+        - containerPort: 3888
+          name: leader-election
+        resources:
+          limits:
+            cpu: "500m"
+            memory: 1Gi
+          requests:
+            cpu: "500m"
+            memory: 1Gi
+        securityContext:
+          capabilities:
+            add:
+              - IPC_LOCK
+        env:
+          - name: ZOOKEEPER_CLIENT_PORT
+            value: "2181"
+          - name: ZOOKEEPER_SERVER_PORT
+            value: "2888"
+          - name: ZOOKEEPER_ELECTION_PORT
+            value: "3888"
+          - name: ZOOKEEPER_SERVER_1
+            value: "zookeeper-0.zookeeper-headless.default.svc.cluster.local:2888:3888"
+          - name: ZOOKEEPER_SERVER_2
+            value: "zookeeper-1.zookeeper-headless.default.svc.cluster.local:2888:3888"
+          - name: ZOOKEEPER_SERVER_3
+            value: "zookeeper-2.zookeeper-headless.default.svc.cluster.local:2888:3888"
+          - name: ZOOKEEPER_DATA_DIR
+            value: "/var/lib/zookeeper/data"
+          - name: ZOOKEEPER_DATA_LOG_DIR
+            value: "/var/lib/zookeeper/log"
+          - name: ZOOKEEPER_TICK_TIME
+            value: "2000"
+          - name: ZOOKEEPER_SYNC_LIMIT
+            value: "2"
+        readinessProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - 'if [[ $(echo ruok | nc 127.0.0.1 2181) == "imok" ]]; then exit 0; else exit 1; fi'
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+        # These volume mounts are persistent. They are like inline claims,
+        # but not exactly because the names need to match exactly one of
+        # the stateful pod volumes.
+        volumeMounts:
+        - name: zookeeper-data
+          mountPath: /var/lib/zookeeper
+  # These are converted to volume claims by the controller
+  # and mounted at the paths mentioned above.
+  # do not use these in production until ssd GCEPersistentDisk or other ssd pd
+  volumeClaimTemplates:
+  - metadata:
+      name: zookeeper-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: fast
+      resources:
+        requests:
+          storage: 1Gi
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: fast
+provisioner: k8s.io/minikube-hostpath
+parameters:
+  type: pd-ssd
