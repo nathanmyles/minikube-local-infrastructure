@@ -64,3 +64,22 @@ kafka-service-down:
 kafka-statefulset-down:
 	kubectl delete -f kafka/statefulset.yaml
 ## Kafka end
+
+## Schema Registry
+schema-registry-up: schema-registry-service-up schema-registry-deployment-up
+
+schema-registry-service-up:
+	kubectl apply -f schema-registry/service.yaml
+
+schema-registry-deployment-up:
+	kubectl apply -f schema-registry/deployment.yaml
+
+schema-registry-down: schema-registry-service-down schema-registry-deployment-down
+
+schema-registry-service-down:
+	kubectl delete -f schema-registry/service.yaml
+
+schema-registry-deployment-down:
+	kubectl delete -f schema-registry/deployment.yaml
+## Schema Registry end
+

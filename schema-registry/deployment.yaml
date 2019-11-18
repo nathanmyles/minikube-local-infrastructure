@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-schema-registry
+  labels:
+    app: local-schema-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-schema-registry
+  template:
+    metadata:
+      labels:
+        app: local-schema-registry
+    spec:
+      containers:
+        - name: schema-registry
+          image: confluentinc/cp-schema-registry:5.3.1
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL
+              value: "zookeeper-0.zookeeper.default.svc.cluster.local:2181"
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              value: "local-schema-registry.default.svc.cluster.local"
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: "http://0.0.0.0:8081"
+            - name: SCHEMA_REGISTRY_DEBUG
+              value: "true"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8081
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
