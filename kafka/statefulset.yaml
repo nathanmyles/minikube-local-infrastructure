@@ -47,6 +47,8 @@ spec:
             value: "zookeeper-0.zookeeper.default.svc.cluster.local:2181" # ,zookeeper-1.zookeeper.default.svc.cluster.local:2181,zookeeper-2.zookeeper.default.svc.cluster.local:2181"
           - name: KAFKA_LOG_DIR
             value: "/kafka_data/data"
+          - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+            value: "1"
         readinessProbe:
           tcpSocket:
             port: 9092
