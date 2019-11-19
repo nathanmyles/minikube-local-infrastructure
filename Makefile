@@ -7,9 +7,9 @@ stop:
 enable-private-repo:
 	./enter_regcreds.sh
 
-up: cassandra-up zookeeper-up kafka-up
+up: cassandra-up zookeeper-up kafka-up schema-registry-up
 
-down: cassandra-down zookeeper-down kafka-down
+down: schema-registry-down kafka-down zookeeper-down cassandra-down
 
 ## Cassandra
 cassandra-up: cassandra-service-up cassandra-statefulset-up
