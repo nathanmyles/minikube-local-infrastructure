@@ -7,9 +7,17 @@ stop:
 enable-private-repo:
 	./enter_regcreds.sh
 
-up: cassandra-up zookeeper-up kafka-up schema-registry-up
+up: storage-up cassandra-up zookeeper-up kafka-up schema-registry-up
 
-down: schema-registry-down kafka-down zookeeper-down cassandra-down
+down: schema-registry-down kafka-down zookeeper-down cassandra-down storage-down
+
+## Storage
+storage-up:
+	kubectl apply -f storage/storage.yaml
+
+storage-down:
+	kubectl apply -f storage/storage.yaml
+## Storage end
 
 ## Cassandra
 cassandra-up: cassandra-service-up cassandra-statefulset-up
