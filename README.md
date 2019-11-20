@@ -27,3 +27,9 @@ so you can deploy your services into the cluster for testing locally.
 
 More commands in the [Makefile](Makefile)
 
+## Export minikube docker environment
+
+Use this command: `eval $(minikube docker-env)`
+
+This will allow minikube to have access to the images you build by using it's docker instance.
+You need to run it in each shell you are building containers in.
