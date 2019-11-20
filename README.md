@@ -33,3 +33,21 @@ Use this command: `eval $(minikube docker-env)`
 
 This will allow minikube to have access to the images you build by using it's docker instance.
 You need to run it in each shell you are building containers in.
+
+## Pull images from a private repo
+
+Use this command: `make enable-private-repo`
+
+Minikube supports pulling images from several different container registries. If you are pulling 
+from an unsupported registry, then you can use the `make enable-private-repo` command to allow 
+minikube to pull images from it. This will registry a kubernetes secret that you can pull in your
+manifests to allow access to your private registry.
+
+Example of using the secret in a manifest:
+```yaml
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: ${secret_name}
+```

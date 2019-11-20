@@ -16,8 +16,6 @@ spec:
         app: cassandra
     spec:
       terminationGracePeriodSeconds: 1800
-      imagePullSecrets:
-        - name: regcred
       containers:
       - name: cassandra
         image: cassandra:3.11.5
