@@ -7,9 +7,9 @@ stop:
 enable-private-repo:
 	./enter_regcreds.sh
 
-up: storage-up cassandra-up zookeeper-up kafka-up schema-registry-up
+up: storage-up cassandra-up zookeeper-up kafka-up schema-registry-up vault-up
 
-down: schema-registry-down kafka-down zookeeper-down cassandra-down storage-down
+down: vault-down schema-registry-down kafka-down zookeeper-down cassandra-down storage-down
 
 ## Storage
 storage-up:
@@ -91,3 +91,35 @@ schema-registry-deployment-down:
 	kubectl delete -f schema-registry/deployment.yaml
 ## Schema Registry end
 
+## Vault
+vault-up: vault-service-up vault-statefulset-up vault-serviceaccount-up vault-configure-kubernetes-auth
+vault-service-up:
+	kubectl apply -f vault/service.yaml
+
+vault-statefulset-up:
+	kubectl apply -f vault/statefulset.yaml
+
+vault-serviceaccount-up:
+	kubectl apply -f vault/service-account.yaml
+
+vault-configure-kubernetes-auth:
+	kubectl apply -f vault/kubernetes-auth/cluster-binding.yaml
+	./vault/kubernetes-auth/create-configmap.sh
+	kubectl apply -f vault/kubernetes-auth/configure-job.yaml
+
+vault-down: vault-service-down vault-statefulset-down vault-serviceaccount-down vault-disable-kubernetes-auth
+
+vault-service-down:
+	kubectl delete -f vault/service.yaml
+
+vault-statefulset-down:
+	kubectl delete -f vault/statefulset.yaml
+
+vault-serviceaccount-down:
+	kubectl delete -f vault/service-account.yaml
+
+vault-disable-kubernetes-auth:
+	kubectl delete -f vault/kubernetes-auth/configure-job.yaml
+	kubectl delete configmap kubernetes-auth-config
+	kubectl delete -f vault/kubernetes-auth/cluster-binding.yaml
+## Vault end

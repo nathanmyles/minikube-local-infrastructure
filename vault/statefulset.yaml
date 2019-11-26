@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vault
+  labels:
+    app: vault
+spec:
+  serviceName: vault
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vault
+  template:
+    metadata:
+      labels:
+        app: vault
+    spec:
+      containers:
+        - name: vault
+          image: vault:1.3.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8200
+          securityContext:
+            capabilities:
+              add:
+                - IPC_LOCK
+          env:
+            - name: VAULT_DEV_ROOT_TOKEN_ID
+              value: "roottoken"
+          readinessProbe:
+            # Check status; unsealed vault servers return 0
+            # The exit code reflects the seal status:
+            #   0 - unsealed
+            #   1 - error
+            #   2 - sealed
+            exec:
+              command:
+                - "/bin/sh"
+                - "-ec"
+                - |
+                  vault status | if [ $? -ne 1 ]; then exit 0; fi
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 5

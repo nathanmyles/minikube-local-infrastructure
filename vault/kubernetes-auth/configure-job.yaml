@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: configure-kubernetes-auth
+spec:
+  template:
+    spec:
+      containers:
+        - name: configure-kubernetes-auth
+          image: vault:1.3.0
+          command: ["/bin/sh"]
+          args:
+            - -ec
+            - |
+              while [ -z  $SA_JWT_TOKEN ] || [ -z $K8S_HOST ] || [ -z $SA_CA_CRT ]
+              do
+                sleep 5
+              done
+              export VAULT_ADDR="http://vault-0.vault.default.svc.cluster.local:8200"
+              vault login roottoken
+              vault secrets enable -version=2  -path=kv kv
+              vault auth enable kubernetes
+              vault write auth/kubernetes/config \
+                      token_reviewer_jwt="$SA_JWT_TOKEN" \
+                      kubernetes_host="https://$K8S_HOST:8443" \
+                      kubernetes_ca_cert="$SA_CA_CRT"
+          env:
+            - name: SA_JWT_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: kubernetes-auth-config
+                  key: sa.jwt.token
+            - name: K8S_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: kubernetes-auth-config
+                  key: k8s.host
+            - name: SA_CA_CRT
+              valueFrom:
+                configMapKeyRef:
+                  name: kubernetes-auth-config
+                  key: ca.crt
+      restartPolicy: Never
