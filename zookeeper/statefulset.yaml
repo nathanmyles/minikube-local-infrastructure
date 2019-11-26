@@ -15,7 +15,6 @@ spec:
       labels:
         app: zookeeper
     spec:
-      terminationGracePeriodSeconds: 1800
       containers:
       - name: zookeeper
         image: confluentinc/cp-zookeeper:5.3.1
