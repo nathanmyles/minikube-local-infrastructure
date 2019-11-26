@@ -16,7 +16,7 @@ storage-up:
 	kubectl apply -f storage/storage.yaml
 
 storage-down:
-	kubectl apply -f storage/storage.yaml
+	kubectl delete -f storage/storage.yaml
 ## Storage end
 
 ## Cassandra
