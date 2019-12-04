@@ -7,9 +7,9 @@ stop:
 enable-private-repo:
 	./enter_regcreds.sh
 
-up: storage-up cassandra-up zookeeper-up kafka-up schema-registry-up vault-up
+up: storage-up cassandra-up zookeeper-up kafka-up schema-registry-up vault-up elasticsearch-up
 
-down: vault-down schema-registry-down kafka-down zookeeper-down cassandra-down storage-down
+down: elasticsearch-down vault-down schema-registry-down kafka-down zookeeper-down cassandra-down storage-down
 
 ## Storage
 storage-up:
@@ -123,3 +123,21 @@ vault-disable-kubernetes-auth:
 	kubectl delete configmap kubernetes-auth-config
 	kubectl delete -f vault/kubernetes-auth/cluster-binding.yaml
 ## Vault end
+
+## ElasticSearch
+elasticsearch-up: elasticsearch-service-up elasticsearch-statefulset-up
+
+elasticsearch-service-up:
+	kubectl apply -f elasticsearch/service.yaml
+
+elasticsearch-statefulset-up:
+	kubectl apply -f elasticsearch/statefulset.yaml
+
+elasticsearch-down: elasticsearch-service-down elasticsearch-statefulset-down
+
+elasticsearch-service-down:
+	kubectl delete -f elasticsearch/service.yaml
+
+elasticsearch-statefulset-down:
+	kubectl delete -f elasticsearch/statefulset.yaml
+## ElasticSearch end

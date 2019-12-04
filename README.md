@@ -10,7 +10,8 @@ so you can deploy your services into the cluster for testing locally.
 - Zookeeper (available at: zookeeper-0.zookeeper.default.svc.cluster.local:2181)
 - Kafka (available at: kafka-0.kafka.default.svc.cluster.local:9092)
 - Schema Registry (available at: http://local-schema-registry.default.svc.cluster.local:8081)
-- Vault (available at: vault-0.vault.default.svc.cluster.local:8200)
+- Vault (available at: http://vault-0.vault.default.svc.cluster.local:8200)
+- ElasticSearch (available at: http://elasticsearch-0.elasticsearch.default.svc.cluster.local:9200)
 
 ## Prerequisites
 
