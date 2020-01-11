@@ -10,6 +10,10 @@ delete:
 delete-persistent-volume-claims:
 	kubectl delete pvc --all
 
+restart: down up
+
+restart-clean-data: down delete-persistent-volume-claims up
+
 enable-private-repo:
 	./enter_regcreds.sh
 

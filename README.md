@@ -23,6 +23,10 @@ so you can deploy your services into the cluster for testing locally.
 
 - Start services: `make up`
 
+- Restart all services: `make restart`
+
+- Restart all services and delete all data: `make restart-clean-data`
+
 - Stop services: `make down`
 
 - Stop minikube `make stop`
