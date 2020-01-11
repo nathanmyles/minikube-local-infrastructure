@@ -1,4 +1,4 @@
-# kube-infrastructure-starter
+# minikube-local-infrastructure
 
 Base infrastructure project for kubernetes. Can be used for local development when 
 working in a kubernetes environment. Allows you to stand up infrastructure components 
