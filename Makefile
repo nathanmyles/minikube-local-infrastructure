@@ -4,6 +4,12 @@ start:
 stop:
 	minikube stop
 
+delete:
+	minikube delete
+
+delete-persistent-volume-claims:
+	kubectl delete pvc --all
+
 enable-private-repo:
 	./enter_regcreds.sh
 
