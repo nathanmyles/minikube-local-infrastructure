@@ -17,9 +17,9 @@ restart-clean-data: down delete-persistent-volume-claims up
 enable-private-repo:
 	./enter_regcreds.sh
 
-up: storage-up cassandra-up zookeeper-up kafka-up schema-registry-up vault-up elasticsearch-up
+up: storage-up vault-up cassandra-up zookeeper-up kafka-up schema-registry-up elasticsearch-up
 
-down: elasticsearch-down vault-down schema-registry-down kafka-down zookeeper-down cassandra-down storage-down
+down: elasticsearch-down schema-registry-down kafka-down zookeeper-down cassandra-down vault-down storage-down
 
 ## Storage
 storage-up:
@@ -30,7 +30,10 @@ storage-down:
 ## Storage end
 
 ## Cassandra
-cassandra-up: cassandra-service-up cassandra-statefulset-up
+cassandra-up: cassandra-configmap-up cassandra-service-up cassandra-statefulset-up
+
+cassandra-configmap-up:
+	kubectl create configmap cassandra-config --from-file=cassandra/config/
 
 cassandra-service-up:
 	kubectl apply -f cassandra/service.yaml
@@ -38,7 +41,10 @@ cassandra-service-up:
 cassandra-statefulset-up:
 	kubectl apply -f cassandra/statefulset.yaml
 
-cassandra-down: cassandra-service-down cassandra-statefulset-down
+cassandra-down: cassandra-service-down cassandra-statefulset-down cassandra-configmap-down
+
+cassandra-configmap-down:
+	kubectl delete configmap cassandra-config
 
 cassandra-service-down:
 	kubectl delete -f cassandra/service.yaml
