@@ -14,6 +14,7 @@ spec:
             - |
               while [ -z  $SA_JWT_TOKEN ] || [ -z $K8S_HOST ] || [ -z $SA_CA_CRT ]
               do
+                echo "waiting for configuration..."
                 sleep 5
               done
               curl http://local-vault.default/ca_cert.crt > /ca_cert.crt

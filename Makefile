@@ -146,6 +146,9 @@ vault-configure-kubernetes-auth:
 	./vault/kubernetes-auth/create-configmap.sh
 	kubectl apply -f vault/kubernetes-auth/configure-job.yaml
 
+vault-cleanup:
+	kubectl delete -f vault/kubernetes-auth/configure-job.yaml
+
 vault-down: vault-configmap-down vault-service-down vault-statefulset-down vault-service-account-down vault-disable-kubernetes-auth
 
 vault-configmap-down:
@@ -160,8 +163,7 @@ vault-statefulset-down:
 vault-service-account-down:
 	kubectl delete -f vault/service-account.yaml
 
-vault-disable-kubernetes-auth:
-	kubectl delete -f vault/kubernetes-auth/configure-job.yaml
+vault-disable-kubernetes-auth: vault-cleanup
 	kubectl delete configmap kubernetes-auth-config
 	kubectl delete -f vault/kubernetes-auth/cluster-binding.yaml
 
