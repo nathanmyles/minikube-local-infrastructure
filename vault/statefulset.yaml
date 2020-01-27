@@ -1,22 +1,23 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: vault
+  name: local-vault
   labels:
-    app: vault
+    app: local-vault
 spec:
-  serviceName: vault
+  serviceName: local-vault
   replicas: 1
   selector:
     matchLabels:
-      app: vault
+      app: local-vault
   template:
     metadata:
       labels:
-        app: vault
+        app: local-vault
     spec:
+      serviceAccountName: local-vault
       containers:
-        - name: vault
+        - name: local-vault
           image: vault:1.3.0
           imagePullPolicy: Always
           ports:

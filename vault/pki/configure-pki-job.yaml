@@ -12,22 +12,22 @@ spec:
           args:
             - -ec
             - |
-              export VAULT_ADDR="http://vault.default.svc.cluster.local:8200"
+              export VAULT_ADDR="http://local-vault.default:8200"
               vault login roottoken
               vault secrets enable pki
               vault secrets tune -max-lease-ttl=8760h pki
               vault write pki/root/generate/internal \
-                  common_name=default.svc.cluster.local \
+                  common_name=default \
                   ttl=8760h
               vault write pki/config/urls \
-                  issuing_certificates="http://vault.default.svc.cluster.local:8200/v1/pki/ca" \
-                  crl_distribution_points="http://vault.default.svc.cluster.local:8200/v1/pki/crl"
+                  issuing_certificates="http://local-vault.default:8200/v1/pki/ca" \
+                  crl_distribution_points="http://local-vault.default:8200/v1/pki/crl"
               vault write pki/roles/kafka-default \
-                  allowed_domains=kafka.default.svc.cluster.local \
+                  allowed_domains=local-kafka.default \
                   allow_subdomains=true \
                   max_ttl=72h
               vault write pki/roles/cassandra-default \
-                  allowed_domains=cassandra.default.svc.cluster.local \
+                  allowed_domains=local-cassandra.default \
                   allow_subdomains=true \
                   max_ttl=72h
       restartPolicy: Never

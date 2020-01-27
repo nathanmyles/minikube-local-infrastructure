@@ -422,7 +422,7 @@ seed_provider:
     parameters:
       # seeds is actually a comma-delimited list of addresses.
       # Ex: "<ip1>,<ip2>,<ip3>"
-      - seeds: "cassandra-0.cassandra.default.svc.cluster.local"
+      - seeds: "local-cassandra-0.local-cassandra.default"
 
 # For workloads with more data than can fit in memory, Cassandra's
 # bottleneck will be reads that need to fetch data from
@@ -1062,7 +1062,7 @@ client_encryption_options:
   optional: true
   keystore: /usr/local/lib/cassandra/conf/keystore.jks
   keystore_password: abcdef
-  # require_client_auth: false
+  require_client_auth: true
   # Set trustore and truststore_password if require_client_auth is true
   truststore: /usr/local/lib/cassandra/conf/truststore.jks
   truststore_password: abcdef

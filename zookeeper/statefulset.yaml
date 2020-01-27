@@ -1,27 +1,28 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: zookeeper
+  name: local-zookeeper
   labels:
-    app: zookeeper
+    app: local-zookeeper
 spec:
-  serviceName: zookeeper
+  serviceName: local-zookeeper
   replicas: 1
   selector:
     matchLabels:
-      app: zookeeper
+      app: local-zookeeper
   template:
     metadata:
       labels:
-        app: zookeeper
+        app: local-zookeeper
     spec:
       containers:
-      - name: zookeeper
+      - name: local-zookeeper
         image: confluentinc/cp-zookeeper:5.3.1
         command: [ "bash", "-c"]
         args:
-        - echo $((${HOSTNAME//[!0-9]/}+1)) > /var/lib/zookeeper/data/myid;
-          /etc/confluent/docker/run;
+        - |
+          echo $((${HOSTNAME//[!0-9]/}+1)) > /var/lib/zookeeper/data/myid
+          /etc/confluent/docker/run
         imagePullPolicy: Always
         ports:
         - containerPort: 2181
@@ -49,11 +50,11 @@ spec:
           - name: ZOOKEEPER_ELECTION_PORT
             value: "3888"
           - name: ZOOKEEPER_SERVER_1
-            value: "zookeeper-0.zookeeper.default.svc.cluster.local:2888:3888"
+            value: "local-zookeeper-0.local-zookeeper.default:2888:3888"
 #          - name: ZOOKEEPER_SERVER_2
-#            value: "zookeeper-1.zookeeper.default.svc.cluster.local:2888:3888"
+#            value: "local-zookeeper-1.local-zookeeper.default:2888:3888"
 #          - name: ZOOKEEPER_SERVER_3
-#            value: "zookeeper-2.zookeeper.default.svc.cluster.local:2888:3888"
+#            value: "local-zookeeper-2.local-zookeeper.default:2888:3888"
           - name: ZOOKEEPER_DATA_DIR
             value: "/var/lib/zookeeper/data"
           - name: ZOOKEEPER_DATA_LOG_DIR

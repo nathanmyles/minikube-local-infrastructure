@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: cassandra
+  name: local-cassandra
   labels:
-    app: cassandra
+    app: local-cassandra
 spec:
-  serviceName: cassandra
+  serviceName: local-cassandra
   replicas: 1
   selector:
     matchLabels:
-      app: cassandra
+      app: local-cassandra
   template:
     metadata:
       labels:
-        app: cassandra
+        app: local-cassandra
     spec:
       containers:
-      - name: cassandra
+      - name: local-cassandra
         image: cassandra:3.11.5
         command: ["/bin/sh"]
         args:
@@ -35,6 +35,8 @@ spec:
           name: jmx
         - containerPort: 9042
           name: cql
+        - containerPort: 9142
+          name: tls-cql
         resources:
           limits:
             cpu: "500m"
@@ -84,11 +86,11 @@ spec:
         args:
           - -ec
           - |
-            export VAULT_ADDR="http://vault.default.svc.cluster.local:8200"
+            export VAULT_ADDR="http://local-vault.default:8200"
             export VAULT_FORMAT="json"
             vault login roottoken
             vault write pki/issue/cassandra-default \
-              common_name=${HOSTNAME}.cassandra.default.svc.cluster.local > /certs/certs.json
+              common_name=${HOSTNAME}.local-cassandra.default > /certs/certs.json
             cat /certs/certs.json | jq -r .data.certificate > /certs/certificate.pem
             cat /certs/certs.json | jq -r .data.issuing_ca > /certs/issuing_ca.pem
             cat /certs/certs.json | jq -r .data.private_key > /certs/private_key.pem
@@ -103,7 +105,7 @@ spec:
           - |
             openssl pkcs12 -export -out /certs/private_key.pkcs12 -in /certs/certificate.pem -inkey /certs/private_key.pem -passin pass: -passout pass:abcdef
             keytool -genkey -keyalg RSA -alias endeca -keystore /certs/truststore.jks -storepass abcdef <<EOF
-            ${HOSTNAME}.cassandra.default.svc.cluster.local
+            Unknown
             Unknown
             Unknown
             Unknown
@@ -117,7 +119,7 @@ spec:
             yes
             EOF
             keytool -genkey -keyalg RSA -alias endeca -keystore /certs/keystore.jks -storepass abcdef<<EOF
-            ${HOSTNAME}.cassandra.default.svc.cluster.local
+            Unknown
             Unknown
             Unknown
             Unknown

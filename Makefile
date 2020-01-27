@@ -108,7 +108,7 @@ schema-registry-deployment-down:
 ## Schema Registry end
 
 ## Vault
-vault-up: vault-service-up vault-statefulset-up vault-serviceaccount-up vault-configure-kubernetes-auth
+vault-up: vault-service-up vault-statefulset-up vault-serviceaccount-up vault-configure-kubernetes-auth vault-configure-pki
 vault-service-up:
 	kubectl apply -f vault/service.yaml
 
@@ -123,7 +123,10 @@ vault-configure-kubernetes-auth:
 	./vault/kubernetes-auth/create-configmap.sh
 	kubectl apply -f vault/kubernetes-auth/configure-job.yaml
 
-vault-down: vault-service-down vault-statefulset-down vault-serviceaccount-down vault-disable-kubernetes-auth
+vault-configure-pki:
+	kubectl apply -f vault/pki/configure-pki-job.yaml
+
+vault-down: vault-service-down vault-statefulset-down vault-serviceaccount-down vault-disable-kubernetes-auth vault-cleanup-configure-pki-job
 
 vault-service-down:
 	kubectl delete -f vault/service.yaml
@@ -138,6 +141,9 @@ vault-disable-kubernetes-auth:
 	kubectl delete -f vault/kubernetes-auth/configure-job.yaml
 	kubectl delete configmap kubernetes-auth-config
 	kubectl delete -f vault/kubernetes-auth/cluster-binding.yaml
+
+vault-cleanup-configure-pki-job:
+	kubectl delete -f vault/pki/configure-pki-job.yaml
 ## Vault end
 
 ## ElasticSearch

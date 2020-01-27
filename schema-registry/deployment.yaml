@@ -15,15 +15,15 @@ spec:
         app: local-schema-registry
     spec:
       containers:
-        - name: schema-registry
+        - name: local-schema-registry
           image: confluentinc/cp-schema-registry:5.3.1
           ports:
             - containerPort: 8081
           env:
             - name: SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL
-              value: "zookeeper-0.zookeeper.default.svc.cluster.local:2181"
+              value: "local-zookeeper-0.local-zookeeper.default:2181"
             - name: SCHEMA_REGISTRY_HOST_NAME
-              value: "local-schema-registry.default.svc.cluster.local"
+              value: "local-schema-registry.default"
             - name: SCHEMA_REGISTRY_LISTENERS
               value: "http://0.0.0.0:8081"
             - name: SCHEMA_REGISTRY_DEBUG

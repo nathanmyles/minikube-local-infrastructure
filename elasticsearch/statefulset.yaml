@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: elasticsearch
+  name: local-elasticsearch
   labels:
-    app: elasticsearch
+    app: local-elasticsearch
 spec:
-  serviceName: elasticsearch
+  serviceName: local-elasticsearch
   replicas: 1
   selector:
     matchLabels:
-      app: elasticsearch
+      app: local-elasticsearch
   template:
     metadata:
       labels:
-        app: elasticsearch
+        app: local-elasticsearch
     spec:
       containers:
-        - name: elasticsearch
+        - name: local-elasticsearch
           image: docker.elastic.co/elasticsearch/elasticsearch:7.5.0
           imagePullPolicy: Always
           ports:

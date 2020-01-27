@@ -6,12 +6,12 @@ so you can deploy your services into the cluster for testing locally.
 
 ## Support Services
 
-- Cassandra (available at: cassandra-0.cassandra.default.svc.cluster.local:9042)
-- Zookeeper (available at: zookeeper-0.zookeeper.default.svc.cluster.local:2181)
-- Kafka (available at: kafka-0.kafka.default.svc.cluster.local:9092)
-- Schema Registry (available at: http://local-schema-registry.default.svc.cluster.local:8081)
-- Vault (available at: http://vault-0.vault.default.svc.cluster.local:8200)
-- ElasticSearch (available at: http://elasticsearch-0.elasticsearch.default.svc.cluster.local:9200)
+- Cassandra (available at: local-cassandra-0.local-cassandra.default:9042)
+- Zookeeper (available at: local-zookeeper-0.local-zookeeper.default:2181)
+- Kafka (available at: local-kafka-0.local-kafka.default:9092)
+- Schema Registry (available at: http://local-schema-registry.default:8081)
+- Vault (available at: http://local-vault.default:8200)
+- ElasticSearch (available at: http://local-elasticsearch.default:9200)
 
 ## Prerequisites
 
