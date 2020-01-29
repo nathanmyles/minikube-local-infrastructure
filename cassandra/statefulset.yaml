@@ -86,7 +86,7 @@ spec:
         args:
           - -ec
           - |
-            export VAULT_ADDR="http://local-vault.default:8200"
+            export VAULT_ADDR="http://local-vault.default:8300"
             export VAULT_FORMAT="json"
             vault login roottoken
             vault write pki/issue/cassandra-default \
@@ -141,7 +141,6 @@ spec:
         - name: config-volume
           configMap:
             name: cassandra-config
-            defaultMode: 0775
   volumeClaimTemplates:
   - metadata:
       name: cassandra-data

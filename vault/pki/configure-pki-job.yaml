@@ -12,16 +12,8 @@ spec:
           args:
             - -ec
             - |
-              export VAULT_ADDR="http://local-vault.default:8200"
+              export VAULT_ADDR="http://local-vault.default:8300"
               vault login roottoken
-              vault secrets enable pki
-              vault secrets tune -max-lease-ttl=8760h pki
-              vault write pki/root/generate/internal \
-                  common_name=default \
-                  ttl=8760h
-              vault write pki/config/urls \
-                  issuing_certificates="http://local-vault.default:8200/v1/pki/ca" \
-                  crl_distribution_points="http://local-vault.default:8200/v1/pki/crl"
               vault write pki/roles/kafka-default \
                   allowed_domains=local-kafka.default \
                   allow_subdomains=true \

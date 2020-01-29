@@ -19,6 +19,20 @@ spec:
       containers:
         - name: local-vault
           image: vault:1.3.0
+          command: ["/bin/sh"]
+          args:
+            - -ec
+            - |
+              export VAULT_CACERT="/var/lib/vault/certs/ca_cert.crt"
+              export VAULT_ADDR="https://local-vault.default:8200"
+              export VAULT_FORMAT="json"
+              vault server -config=/etc/vault/config.hcl &
+              process_id=$!
+              sleep 2
+              vault operator unseal $(cat /var/lib/vault/certs/unseal_1)
+              vault operator unseal $(cat /var/lib/vault/certs/unseal_2)
+              vault operator unseal $(cat /var/lib/vault/certs/unseal_3)
+              wait $process_id
           imagePullPolicy: Always
           ports:
             - containerPort: 8200
@@ -26,9 +40,6 @@ spec:
             capabilities:
               add:
                 - IPC_LOCK
-          env:
-            - name: VAULT_DEV_ROOT_TOKEN_ID
-              value: "roottoken"
           readinessProbe:
             # Check status; unsealed vault servers return 0
             # The exit code reflects the seal status:
@@ -40,9 +51,85 @@ spec:
                 - "/bin/sh"
                 - "-ec"
                 - |
+                  export VAULT_ADDR="http://127.0.0.1:8300"
                   vault status | if [ $? -ne 1 ]; then exit 0; fi
             failureThreshold: 2
             initialDelaySeconds: 5
             periodSeconds: 3
             successThreshold: 1
             timeoutSeconds: 5
+          volumeMounts:
+          - name: vault-data
+            mountPath: /var/lib/vault/data
+          - name: certs
+            mountPath: /var/lib/vault/certs
+          - name: config-volume
+            mountPath: /etc/vault
+      initContainers:
+        - name: configure-pki
+          image:  nathanmyles/vault-client:0.1.0
+          securityContext:
+            capabilities:
+              add:
+                - IPC_LOCK
+          command: ["/bin/sh"]
+          args:
+            - -ec
+            - |
+              export VAULT_ADDR="http://127.0.0.1:8200"
+              export VAULT_FORMAT="json"
+              vault server -config=/etc/vault/init-config.hcl &
+              sleep 2
+              vault operator init > /var/lib/vault/certs/init.json
+              root_token=$(cat /var/lib/vault/certs/init.json | jq -r .root_token)
+              cat /var/lib/vault/certs/init.json | jq -r .unseal_keys_hex[0] > /var/lib/vault/certs/unseal_1
+              cat /var/lib/vault/certs/init.json | jq -r .unseal_keys_hex[1] > /var/lib/vault/certs/unseal_2
+              cat /var/lib/vault/certs/init.json | jq -r .unseal_keys_hex[2] > /var/lib/vault/certs/unseal_3
+              vault operator unseal $(cat /var/lib/vault/certs/unseal_1)
+              vault operator unseal $(cat /var/lib/vault/certs/unseal_2)
+              vault operator unseal $(cat /var/lib/vault/certs/unseal_3)
+              vault login $root_token
+              vault token create -id=roottoken
+              vault secrets enable pki
+              vault secrets tune -max-lease-ttl=8760h pki
+              vault write pki/root/generate/internal \
+                  common_name=default \
+                  ttl=8760h
+              vault write pki/config/urls \
+                  issuing_certificates="https://local-vault.default:8200/v1/pki/ca" \
+                  crl_distribution_points="https://local-vault.default:8200/v1/pki/crl"
+              vault write pki/roles/vault-default \
+                  allowed_domains=local-vault.default \
+                  allow_bare_domains=true \
+                  allow_subdomains=true \
+                  max_ttl=72h
+              vault write pki/issue/vault-default \
+                common_name=${HOSTNAME}.local-vault.default \
+                alt_names=local-vault.default > /var/lib/vault/certs/certs.json
+              cat /var/lib/vault/certs/certs.json | jq -r .data.certificate > /var/lib/vault/certs/certificate.crt
+              cat /var/lib/vault/certs/certs.json | jq -r .data.issuing_ca >> /var/lib/vault/certs/certificate.crt
+              cat /var/lib/vault/certs/certs.json | jq -r .data.issuing_ca >> /var/lib/vault/certs/ca_cert.crt
+              cat /var/lib/vault/certs/certs.json | jq -r .data.private_key > /var/lib/vault/certs/private_key.key
+              chmod -R 0775 /var/lib/vault/data
+          volumeMounts:
+            - name: vault-data
+              mountPath: /var/lib/vault/data
+            - name: certs
+              mountPath: /var/lib/vault/certs
+            - name: config-volume
+              mountPath: /etc/vault
+      volumes:
+        - name: certs
+          emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: vault-config
+  volumeClaimTemplates:
+    - metadata:
+        name: vault-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: fast
+        resources:
+          requests:
+            storage: 1Gi

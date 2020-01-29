@@ -7,12 +7,13 @@ stop:
 delete:
 	minikube delete
 
-delete-persistent-volume-claims:
+delete-persistent-volume:
 	kubectl delete pvc --all
+	kubectl delete pv --all
 
 restart: down up
 
-restart-clean-data: down delete-persistent-volume-claims up
+restart-clean-data: down delete-persistent-volume up
 
 enable-private-repo:
 	./enter_regcreds.sh
@@ -108,7 +109,11 @@ schema-registry-deployment-down:
 ## Schema Registry end
 
 ## Vault
-vault-up: vault-service-up vault-statefulset-up vault-serviceaccount-up vault-configure-kubernetes-auth vault-configure-pki
+vault-up: vault-configmap-up vault-serviceaccount-up vault-service-up vault-statefulset-up vault-configure-kubernetes-auth vault-configure-pki
+
+vault-configmap-up:
+	kubectl create configmap vault-config --from-file=vault/config/
+
 vault-service-up:
 	kubectl apply -f vault/service.yaml
 
@@ -126,7 +131,10 @@ vault-configure-kubernetes-auth:
 vault-configure-pki:
 	kubectl apply -f vault/pki/configure-pki-job.yaml
 
-vault-down: vault-service-down vault-statefulset-down vault-serviceaccount-down vault-disable-kubernetes-auth vault-cleanup-configure-pki-job
+vault-down: vault-configmap-down vault-service-down vault-statefulset-down vault-serviceaccount-down vault-disable-kubernetes-auth vault-cleanup-configure-pki-job
+
+vault-configmap-down:
+	kubectl delete configmap vault-config
 
 vault-service-down:
 	kubectl delete -f vault/service.yaml

@@ -16,7 +16,7 @@ spec:
               do
                 sleep 5
               done
-              export VAULT_ADDR="http://local-vault.default:8200"
+              export VAULT_ADDR="http://local-vault.default:8300"
               vault login roottoken
               vault secrets enable -version=2  -path=kv kv
               vault auth enable kubernetes
