@@ -1,12 +1,12 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: configure-pki
+  name: kafka-configure-pki
 spec:
   template:
     spec:
       containers:
-        - name: configure-pki
+        - name: kafka-configure-pki
           image: nathanmyles/vault-client:1.0.0
           command: ["/bin/sh"]
           args:
@@ -15,13 +15,9 @@ spec:
               curl http://local-vault.default/ca_cert.crt > /ca_cert.crt
               export VAULT_CACERT="/ca_cert.crt"
               export VAULT_ADDR="https://local-vault.default:8200"
-              vault login roottoken
+              vault login root_token
               vault write pki/roles/kafka-default \
                   allowed_domains=local-kafka.default \
-                  allow_subdomains=true \
-                  max_ttl=72h
-              vault write pki/roles/cassandra-default \
-                  allowed_domains=local-cassandra.default \
                   allow_subdomains=true \
                   max_ttl=72h
       restartPolicy: Never

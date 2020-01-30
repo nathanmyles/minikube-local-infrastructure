@@ -1,5 +1,5 @@
 start:
-	minikube start --memory 8192 --cpus=4 --vm-driver virtualbox
+	minikube start --memory 8192 --cpus=4
 
 stop:
 	minikube stop
@@ -31,10 +31,13 @@ storage-down:
 ## Storage end
 
 ## Cassandra
-cassandra-up: cassandra-configmap-up cassandra-service-up cassandra-statefulset-up
+cassandra-up: cassandra-configmap-up cassandra-configure-pki cassandra-service-up cassandra-statefulset-up
 
 cassandra-configmap-up:
 	kubectl create configmap cassandra-config --from-file=cassandra/config/
+
+cassandra-configure-pki:
+	kubectl apply -f cassandra/pki/configure-pki-job.yaml
 
 cassandra-service-up:
 	kubectl apply -f cassandra/service.yaml
@@ -42,10 +45,13 @@ cassandra-service-up:
 cassandra-statefulset-up:
 	kubectl apply -f cassandra/statefulset.yaml
 
-cassandra-down: cassandra-service-down cassandra-statefulset-down cassandra-configmap-down
+cassandra-down: cassandra-service-down cassandra-statefulset-down cassandra-configmap-down cassandra-cleanup-configure-pki-job
 
 cassandra-configmap-down:
 	kubectl delete configmap cassandra-config
+
+cassandra-cleanup-configure-pki-job:
+	kubectl delete -f cassandra/pki/configure-pki-job.yaml
 
 cassandra-service-down:
 	kubectl delete -f cassandra/service.yaml
@@ -73,7 +79,10 @@ zookeeper-statefulset-down:
 ## Zookeeper end
 
 ## Kafka
-kafka-up: kafka-service-up kafka-statefulset-up
+kafka-up: kafka-configure-pki kafka-service-up kafka-statefulset-up
+
+kafka-configure-pki:
+	kubectl apply -f kafka/pki/configure-pki-job.yaml
 
 kafka-service-up:
 	kubectl apply -f kafka/service.yaml
@@ -81,13 +90,16 @@ kafka-service-up:
 kafka-statefulset-up:
 	kubectl apply -f kafka/statefulset.yaml
 
-kafka-down: kafka-service-down kafka-statefulset-down
+kafka-down: kafka-service-down kafka-statefulset-down kafka-cleanup-configure-pki-job
 
 kafka-service-down:
 	kubectl delete -f kafka/service.yaml
 
 kafka-statefulset-down:
 	kubectl delete -f kafka/statefulset.yaml
+
+kafka-cleanup-configure-pki-job:
+	kubectl delete -f kafka/pki/configure-pki-job.yaml
 ## Kafka end
 
 ## Schema Registry
@@ -109,7 +121,7 @@ schema-registry-deployment-down:
 ## Schema Registry end
 
 ## Vault
-vault-up: vault-configmap-up vault-serviceaccount-up vault-service-up vault-statefulset-up vault-configure-kubernetes-auth vault-configure-pki
+vault-up: vault-configmap-up vault-serviceaccount-up vault-service-up vault-statefulset-up vault-configure-kubernetes-auth
 
 vault-configmap-up:
 	kubectl create configmap vault-config --from-file=vault/config/
@@ -128,10 +140,7 @@ vault-configure-kubernetes-auth:
 	./vault/kubernetes-auth/create-configmap.sh
 	kubectl apply -f vault/kubernetes-auth/configure-job.yaml
 
-vault-configure-pki:
-	kubectl apply -f vault/pki/configure-pki-job.yaml
-
-vault-down: vault-configmap-down vault-service-down vault-statefulset-down vault-serviceaccount-down vault-disable-kubernetes-auth vault-cleanup-configure-pki-job
+vault-down: vault-configmap-down vault-service-down vault-statefulset-down vault-serviceaccount-down vault-disable-kubernetes-auth
 
 vault-configmap-down:
 	kubectl delete configmap vault-config
@@ -150,8 +159,6 @@ vault-disable-kubernetes-auth:
 	kubectl delete configmap kubernetes-auth-config
 	kubectl delete -f vault/kubernetes-auth/cluster-binding.yaml
 
-vault-cleanup-configure-pki-job:
-	kubectl delete -f vault/pki/configure-pki-job.yaml
 ## Vault end
 
 ## ElasticSearch
