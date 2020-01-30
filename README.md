@@ -16,8 +16,8 @@ so you can deploy your services into the cluster for testing locally.
 - Schema Registry 
     - URL: http://local-schema-registry.default:8081
 - Vault 
-    - non-TLS URL: https://local-vault.default:8200
-    - TLS URL: http://local-vault.default:8300
+    - non-TLS URL: http://local-vault.default:8300
+    - TLS URL: https://local-vault.default:8200
     - CA cert URL: http://local-vault.default/ca_cert.crt
     - root token: root_token
 - ElasticSearch 
