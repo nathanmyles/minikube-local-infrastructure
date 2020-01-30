@@ -65,9 +65,16 @@ spec:
             mountPath: /var/lib/vault/certs
           - name: config-volume
             mountPath: /etc/vault
+        - name: nginx
+          image: nginx
+          ports:
+          - containerPort: 80
+          volumeMounts:
+          - name: certs
+            mountPath: /usr/share/nginx/
       initContainers:
         - name: configure-pki
-          image:  nathanmyles/vault-client:0.1.0
+          image:  nathanmyles/vault-client:1.0.0
           securityContext:
             capabilities:
               add:
@@ -108,8 +115,10 @@ spec:
                 alt_names=local-vault.default > /var/lib/vault/certs/certs.json
               cat /var/lib/vault/certs/certs.json | jq -r .data.certificate > /var/lib/vault/certs/certificate.crt
               cat /var/lib/vault/certs/certs.json | jq -r .data.issuing_ca >> /var/lib/vault/certs/certificate.crt
-              cat /var/lib/vault/certs/certs.json | jq -r .data.issuing_ca >> /var/lib/vault/certs/ca_cert.crt
+              cat /var/lib/vault/certs/certs.json | jq -r .data.issuing_ca > /var/lib/vault/certs/ca_cert.crt
               cat /var/lib/vault/certs/certs.json | jq -r .data.private_key > /var/lib/vault/certs/private_key.key
+              mkdir /var/lib/vault/certs/html
+              cat /var/lib/vault/certs/certs.json | jq -r .data.issuing_ca > /var/lib/vault/certs/html/ca_cert.crt
               chmod -R 0775 /var/lib/vault/data
           volumeMounts:
             - name: vault-data

@@ -6,12 +6,22 @@ so you can deploy your services into the cluster for testing locally.
 
 ## Support Services
 
-- Cassandra (available at: local-cassandra-0.local-cassandra.default:9042)
-- Zookeeper (available at: local-zookeeper-0.local-zookeeper.default:2181)
-- Kafka (available at: local-kafka-0.local-kafka.default:9092)
-- Schema Registry (available at: http://local-schema-registry.default:8081)
-- Vault (available at: http://local-vault.default:8200)
-- ElasticSearch (available at: http://local-elasticsearch.default:9200)
+- Cassandra 
+    - non-TLS URL: local-cassandra-0.local-cassandra.default:9042
+    - TLS URL: local-cassandra-0.local-cassandra.default:9142
+- Zookeeper 
+    - URL: local-zookeeper-0.local-zookeeper.default:2181
+- Kafka 
+    - URL: local-kafka-0.local-kafka.default:9092
+- Schema Registry 
+    - URL: http://local-schema-registry.default:8081
+- Vault 
+    - non-TLS URL: https://local-vault.default:8200
+    - TLS URL: http://local-vault.default:8300
+    - CA cert URL: http://local-vault.default/ca_cert.crt
+    - root token: roottoken
+- ElasticSearch 
+    - URL: http://local-elasticsearch.default:9200
 
 ## Prerequisites
 

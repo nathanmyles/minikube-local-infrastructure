@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
         - name: configure-kubernetes-auth
-          image: vault:1.3.0
+          image: nathanmyles/vault-client:1.0.0
           command: ["/bin/sh"]
           args:
             - -ec
@@ -16,7 +16,9 @@ spec:
               do
                 sleep 5
               done
-              export VAULT_ADDR="http://local-vault.default:8300"
+              curl http://local-vault.default/ca_cert.crt > /ca_cert.crt
+              export VAULT_CACERT="/ca_cert.crt"
+              export VAULT_ADDR="https://local-vault.default:8200"
               vault login roottoken
               vault secrets enable -version=2  -path=kv kv
               vault auth enable kubernetes
