@@ -19,7 +19,7 @@ spec:
               curl http://local-vault.default/ca_cert.crt > /ca_cert.crt
               export VAULT_CACERT="/ca_cert.crt"
               export VAULT_ADDR="https://local-vault.default:8200"
-              vault login roottoken
+              vault login root_token
               vault secrets enable -version=2  -path=kv kv
               vault auth enable kubernetes
               vault write auth/kubernetes/config \

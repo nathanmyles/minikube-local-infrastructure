@@ -96,7 +96,7 @@ spec:
               vault operator unseal $(cat /var/lib/vault/certs/unseal_2)
               vault operator unseal $(cat /var/lib/vault/certs/unseal_3)
               vault login $root_token
-              vault token create -id=roottoken
+              vault token create -id=root_token
               vault secrets enable pki
               vault secrets tune -max-lease-ttl=8760h pki
               vault write pki/root/generate/internal \

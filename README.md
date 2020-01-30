@@ -19,7 +19,7 @@ so you can deploy your services into the cluster for testing locally.
     - non-TLS URL: https://local-vault.default:8200
     - TLS URL: http://local-vault.default:8300
     - CA cert URL: http://local-vault.default/ca_cert.crt
-    - root token: roottoken
+    - root token: root_token
 - ElasticSearch 
     - URL: http://local-elasticsearch.default:9200
 

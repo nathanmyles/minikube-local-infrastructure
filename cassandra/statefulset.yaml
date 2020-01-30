@@ -81,14 +81,16 @@ spec:
           mountPath: /cassandra_config/
       initContainers:
       - name: fetch-certs
-        image: nathanmyles/vault-client:0.1.0
+        image: nathanmyles/vault-client:1.0.0
         command: ["/bin/sh"]
         args:
           - -ec
           - |
-            export VAULT_ADDR="http://local-vault.default:8300"
+            curl http://local-vault.default/ca_cert.crt > /ca_cert.crt
+            export VAULT_CACERT="/ca_cert.crt"
+            export VAULT_ADDR="https://local-vault.default:8200"
             export VAULT_FORMAT="json"
-            vault login roottoken
+            vault login root_token
             vault write pki/issue/cassandra-default \
               common_name=${HOSTNAME}.local-cassandra.default > /certs/certs.json
             cat /certs/certs.json | jq -r .data.certificate > /certs/certificate.pem
