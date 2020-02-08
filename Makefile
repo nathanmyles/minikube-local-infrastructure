@@ -31,13 +31,13 @@ storage-down:
 ## Storage end
 
 ## Cassandra
-cassandra-up: cassandra-configmap-up cassandra-configure-pki cassandra-service-up cassandra-statefulset-up
+cassandra-up: cassandra-configmap-up cassandra-service-account-up cassandra-configure-vault cassandra-service-up cassandra-statefulset-up
 
 cassandra-configmap-up:
 	kubectl create configmap cassandra-config --from-file=cassandra/config/
 
-cassandra-configure-pki:
-	kubectl apply -f cassandra/pki/configure-pki-job.yaml
+cassandra-configure-vault:
+	kubectl apply -f cassandra/pki/configure-vault.yaml
 
 cassandra-service-up:
 	kubectl apply -f cassandra/service.yaml
@@ -45,19 +45,25 @@ cassandra-service-up:
 cassandra-statefulset-up:
 	kubectl apply -f cassandra/statefulset.yaml
 
-cassandra-down: cassandra-service-down cassandra-statefulset-down cassandra-configmap-down cassandra-cleanup-configure-pki-job
+cassandra-service-account-up:
+	kubectl apply -f cassandra/service-account.yaml
+
+cassandra-down: cassandra-service-down cassandra-statefulset-down cassandra-service-account-down cassandra-configmap-down cassandra-cleanup-configure-vault-job
 
 cassandra-configmap-down:
 	kubectl delete configmap cassandra-config
 
-cassandra-cleanup-configure-pki-job:
-	kubectl delete -f cassandra/pki/configure-pki-job.yaml
+cassandra-cleanup-configure-vault-job:
+	kubectl delete -f cassandra/pki/configure-vault.yaml
 
 cassandra-service-down:
 	kubectl delete -f cassandra/service.yaml
 
 cassandra-statefulset-down:
 	kubectl delete -f cassandra/statefulset.yaml
+
+cassandra-service-account-down:
+	kubectl delete -f cassandra/service-account.yaml
 ## Cassandra end
 
 ## Zookeeper
@@ -121,7 +127,7 @@ schema-registry-deployment-down:
 ## Schema Registry end
 
 ## Vault
-vault-up: vault-configmap-up vault-serviceaccount-up vault-service-up vault-statefulset-up vault-configure-kubernetes-auth
+vault-up: vault-configmap-up vault-service-account-up vault-service-up vault-statefulset-up vault-configure-kubernetes-auth
 
 vault-configmap-up:
 	kubectl create configmap vault-config --from-file=vault/config/
@@ -132,7 +138,7 @@ vault-service-up:
 vault-statefulset-up:
 	kubectl apply -f vault/statefulset.yaml
 
-vault-serviceaccount-up:
+vault-service-account-up:
 	kubectl apply -f vault/service-account.yaml
 
 vault-configure-kubernetes-auth:
@@ -140,7 +146,7 @@ vault-configure-kubernetes-auth:
 	./vault/kubernetes-auth/create-configmap.sh
 	kubectl apply -f vault/kubernetes-auth/configure-job.yaml
 
-vault-down: vault-configmap-down vault-service-down vault-statefulset-down vault-serviceaccount-down vault-disable-kubernetes-auth
+vault-down: vault-configmap-down vault-service-down vault-statefulset-down vault-service-account-down vault-disable-kubernetes-auth
 
 vault-configmap-down:
 	kubectl delete configmap vault-config
@@ -151,7 +157,7 @@ vault-service-down:
 vault-statefulset-down:
 	kubectl delete -f vault/statefulset.yaml
 
-vault-serviceaccount-down:
+vault-service-account-down:
 	kubectl delete -f vault/service-account.yaml
 
 vault-disable-kubernetes-auth:

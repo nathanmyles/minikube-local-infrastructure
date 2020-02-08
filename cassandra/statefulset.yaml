@@ -15,6 +15,7 @@ spec:
       labels:
         app: local-cassandra
     spec:
+      serviceAccountName: local-cassandra
       containers:
       - name: local-cassandra
         image: cassandra:3.11.5
@@ -90,7 +91,10 @@ spec:
             export VAULT_CACERT="/ca_cert.crt"
             export VAULT_ADDR="https://local-vault.default:8200"
             export VAULT_FORMAT="json"
-            vault login root_token
+            vault write auth/kubernetes/login \
+              role=local-cassandra \
+              jwt=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) > /tmp/login.json
+            vault login $(cat /tmp/login.json | jq -r .auth.client_token) > /dev/null 2>&1
             vault write pki/issue/cassandra-default \
               common_name=${HOSTNAME}.local-cassandra.default > /certs/certs.json
             cat /certs/certs.json | jq -r .data.certificate > /certs/certificate.pem
