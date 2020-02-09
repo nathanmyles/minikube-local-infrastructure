@@ -2,8 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: elasticsearch
-  name: elasticsearch
+    app: local-elasticsearch
+  name: local-elasticsearch
 spec:
   clusterIP: None
   ports:
@@ -12,4 +12,4 @@ spec:
     - name: transport
       port: 9300
   selector:
-    app: elasticsearch
+    app: local-elasticsearch

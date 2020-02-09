@@ -1,24 +1,31 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: cassandra
+  name: local-cassandra
   labels:
-    app: cassandra
+    app: local-cassandra
 spec:
-  serviceName: cassandra
+  serviceName: local-cassandra
   replicas: 1
   selector:
     matchLabels:
-      app: cassandra
+      app: local-cassandra
   template:
     metadata:
       labels:
-        app: cassandra
+        app: local-cassandra
     spec:
-      terminationGracePeriodSeconds: 1800
+      serviceAccountName: local-cassandra
       containers:
-      - name: cassandra
+      - name: local-cassandra
         image: cassandra:3.11.5
+        command: ["/bin/sh"]
+        args:
+          - -ec
+          - |
+            cp /cassandra_config/cassandra.yaml /etc/cassandra/cassandra.yaml
+            cp /cassandra_config/cassandra-rackdc.properties /etc/cassandra/cassandra-rackdc.properties
+            /docker-entrypoint.sh
         imagePullPolicy: Always
         ports:
         - containerPort: 7000
@@ -29,6 +36,8 @@ spec:
           name: jmx
         - containerPort: 9042
           name: cql
+        - containerPort: 9142
+          name: tls-cql
         resources:
           limits:
             cpu: "500m"
@@ -52,14 +61,6 @@ spec:
             value: 512M
           - name: HEAP_NEWSIZE
             value: 100M
-          - name: CASSANDRA_SEEDS
-            value: "cassandra-0.cassandra.default.svc.cluster.local"
-          - name: CASSANDRA_CLUSTER_NAME
-            value: "Local"
-          - name: CASSANDRA_DC
-            value: "DC1-Local"
-          - name: CASSANDRA_RACK
-            value: "Rack1-Local"
           - name: POD_IP
             valueFrom:
               fieldRef:
@@ -74,7 +75,78 @@ spec:
           timeoutSeconds: 5
         volumeMounts:
         - name: cassandra-data
-          mountPath: /cassandra_data
+          mountPath: /var/lib/cassandra
+        - name: certs
+          mountPath: /usr/local/lib/cassandra/conf/
+        - name: config-volume
+          mountPath: /cassandra_config/
+      initContainers:
+      - name: fetch-certs
+        image: nathanmyles/vault-client:1.0.0
+        command: ["/bin/sh"]
+        args:
+          - -ec
+          - |
+            curl http://local-vault.default/ca_cert.crt > /ca_cert.crt
+            export VAULT_CACERT="/ca_cert.crt"
+            export VAULT_ADDR="https://local-vault.default:8200"
+            export VAULT_FORMAT="json"
+            vault write auth/kubernetes/login \
+              role=local-cassandra \
+              jwt=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) > /tmp/login.json
+            vault login $(cat /tmp/login.json | jq -r .auth.client_token) > /dev/null 2>&1
+            vault write pki/issue/cassandra-default \
+              common_name=${HOSTNAME}.local-cassandra.default > /certs/certs.json
+            cat /certs/certs.json | jq -r .data.certificate > /certs/certificate.pem
+            cat /certs/certs.json | jq -r .data.issuing_ca > /certs/issuing_ca.pem
+            cat /certs/certs.json | jq -r .data.private_key > /certs/private_key.pem
+        volumeMounts:
+          - name: certs
+            mountPath: "/certs"
+      - name: format-certs
+        image: openjdk:8-jre-stretch
+        command: ["/bin/sh"]
+        args:
+          - -ec
+          - |
+            openssl pkcs12 -export -out /certs/private_key.pkcs12 -in /certs/certificate.pem -inkey /certs/private_key.pem -passin pass: -passout pass:abcdef
+            keytool -genkey -keyalg RSA -alias endeca -keystore /certs/truststore.jks -storepass abcdef <<EOF
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            yes
+            yes
+            EOF
+            keytool -delete -alias endeca -keystore /certs/truststore.jks -storepass abcdef
+            keytool -import -v -trustcacerts -alias endeca-ca -file /certs/issuing_ca.pem -keystore /certs/truststore.jks -storepass abcdef <<EOF
+            yes
+            EOF
+            keytool -genkey -keyalg RSA -alias endeca -keystore /certs/keystore.jks -storepass abcdef<<EOF
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            yes
+            yes
+            EOF
+            keytool -delete -alias endeca -keystore /certs/keystore.jks -storepass abcdef
+            keytool -v -importkeystore -srckeystore /certs/private_key.pkcs12 -srcstoretype PKCS12 -destkeystore /certs/keystore.jks -deststoretype JKS -storepass abcdef --srcstorepass abcdef <<EOF
+            yes
+            EOF
+        volumeMounts:
+          - name: certs
+            mountPath: "/certs"
+      volumes:
+        - name: certs
+          emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: cassandra-config
   volumeClaimTemplates:
   - metadata:
       name: cassandra-data

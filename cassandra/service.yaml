@@ -2,11 +2,14 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: cassandra
-  name: cassandra
+    app: local-cassandra
+  name: local-cassandra
 spec:
   clusterIP: None
   ports:
-  - port: 9042
+  - name: cql
+    port: 9042
+  - name: tls-cql
+    port: 9142
   selector:
-    app: cassandra
+    app: local-cassandra
