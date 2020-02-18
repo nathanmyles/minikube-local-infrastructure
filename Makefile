@@ -85,7 +85,10 @@ zookeeper-statefulset-down:
 ## Zookeeper end
 
 ## Kafka
-kafka-up: kafka-configure-pki kafka-service-up kafka-statefulset-up
+kafka-up: kafka-configmap-up kafka-configure-pki kafka-service-up kafka-statefulset-up
+
+kafka-configmap-up:
+	kubectl create configmap kafka-config --from-file=kafka/config/
 
 kafka-configure-pki:
 	-kubectl apply -f kafka/pki/configure-pki-job.yaml
@@ -96,7 +99,10 @@ kafka-service-up:
 kafka-statefulset-up:
 	-kubectl apply -f kafka/statefulset.yaml
 
-kafka-down: kafka-service-down kafka-statefulset-down kafka-cleanup-configure-pki-job
+kafka-down: kafka-service-down kafka-statefulset-down kafka-cleanup-configure-pki-job kafka-configmap-down
+
+kafka-configmap-down:
+	kubectl delete configmap kafka-config
 
 kafka-service-down:
 	-kubectl delete -f kafka/service.yaml
