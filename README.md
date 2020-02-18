@@ -12,7 +12,8 @@ so you can deploy your services into the cluster for testing locally.
 - Zookeeper 
     - URL: local-zookeeper-0.local-zookeeper.default:2181
 - Kafka 
-    - URL: local-kafka-0.local-kafka.default:9092
+    - non-TLS URL: local-kafka-0.local-kafka.default:9092
+    - TLS URL: local-kafka-0.local-kafka.default:9093
 - Schema Registry 
     - URL: http://local-schema-registry.default:8081
 - Vault 

@@ -20,13 +20,17 @@ spec:
         image: confluentinc/cp-kafka:5.3.1
         command: [ "bash", "-c"]
         args:
-        - export KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://${HOSTNAME}.local-kafka.default:9092";
-          export KAFKA_BROKER_ID="$((${HOSTNAME//[!0-9]/}+1))";
-          /etc/confluent/docker/run;
+        - |
+          cp /kafka_config/server.properties /etc/kafka/server.properties
+          kafka-server-start /etc/kafka/server.properties \
+            --override broker.id=$((${HOSTNAME//[!0-9]/}+1)) \
+            --override advertised.listeners=PLAINTEXT://${HOSTNAME}.local-kafka.default:9092,SSL://${HOSTNAME}.local-kafka.default:9093
         imagePullPolicy: Always
         ports:
         - containerPort: 9092
           name: client
+        - containerPort: 9093
+          name: tls-client
         resources:
           limits:
             cpu: "500m"
@@ -38,17 +42,6 @@ spec:
           capabilities:
             add:
               - IPC_LOCK
-        env:
-          - name: KAFKA_LISTENER
-            value: "PLAINTEXT://9092"
-          - name: KAFKA_ZOOKEEPER_CONNECT
-            value: "local-zookeeper-0.local-zookeeper.default:2181" # ,local-zookeeper-1.local-zookeeper.default:2181,local-zookeeper-2.local-zookeeper.default:2181"
-          - name: KAFKA_LOG_DIR
-            value: "/kafka_data/data"
-          - name: KAFKA_LOG_DIRS
-            value: "/kafka_data/data"
-          - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-            value: "1"
         readinessProbe:
           tcpSocket:
             port: 9092
@@ -56,7 +49,78 @@ spec:
           timeoutSeconds: 5
         volumeMounts:
         - name: kafka-data
-          mountPath: /kafka_data
+          mountPath: /var/lib/kafka
+        - name: certs
+          mountPath: /etc/kafka/secrets
+        - name: config-volume
+          mountPath: /kafka_config/
+      initContainers:
+      - name: fetch-certs
+        image: nathanmyles/vault-client:1.0.0
+        command: ["/bin/sh"]
+        args:
+          - -ec
+          - |
+            curl http://local-vault.default/ca_cert.crt > /ca_cert.crt
+            export VAULT_CACERT="/ca_cert.crt"
+            export VAULT_ADDR="https://local-vault.default:8200"
+            export VAULT_FORMAT="json"
+            vault login root_token
+            vault write pki/issue/kafka-default \
+              common_name=${HOSTNAME}.local-kafka.default > /certs/certs.json
+            cat /certs/certs.json | jq -r .data.certificate > /certs/certificate.pem
+            cat /certs/certs.json | jq -r .data.issuing_ca > /certs/issuing_ca.pem
+            cat /certs/certs.json | jq -r .data.private_key > /certs/private_key.pem
+            echo "abcdef" > /certs/keystore_password
+            echo "abcdef" > /certs/key_password
+            echo "abcdef" > /certs/truststore_password
+        volumeMounts:
+          - name: certs
+            mountPath: "/certs"
+      - name: format-certs
+        image: openjdk:8-jre-stretch
+        command: ["/bin/sh"]
+        args:
+          - -ec
+          - |
+            openssl pkcs12 -export -out /certs/private_key.pkcs12 -in /certs/certificate.pem -inkey /certs/private_key.pem -passin pass: -passout pass:abcdef
+            keytool -genkey -keyalg RSA -alias endeca -keystore /certs/kafka.server.truststore.jks -storepass abcdef <<EOF
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            yes
+            yes
+            EOF
+            keytool -delete -alias endeca -keystore /certs/kafka.server.truststore.jks -storepass abcdef
+            keytool -import -v -trustcacerts -alias endeca-ca -file /certs/issuing_ca.pem -keystore /certs/kafka.server.truststore.jks -storepass abcdef <<EOF
+            yes
+            EOF
+            keytool -genkey -keyalg RSA -alias endeca -keystore /certs/kafka.server.keystore.jks -storepass abcdef<<EOF
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            yes
+            yes
+            EOF
+            keytool -delete -alias endeca -keystore /certs/kafka.server.keystore.jks -storepass abcdef
+            keytool -v -importkeystore -srckeystore /certs/private_key.pkcs12 -srcstoretype PKCS12 -destkeystore /certs/kafka.server.keystore.jks -deststoretype JKS -storepass abcdef --srcstorepass abcdef <<EOF
+            yes
+            EOF
+        volumeMounts:
+          - name: certs
+            mountPath: "/certs"
+      volumes:
+        - name: certs
+          emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: kafka-config
   volumeClaimTemplates:
   - metadata:
       name: kafka-data
