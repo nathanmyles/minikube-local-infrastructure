@@ -15,6 +15,7 @@ spec:
       labels:
         app: local-kafka
     spec:
+      serviceAccountName: local-kafka
       containers:
       - name: local-kafka
         image: confluentinc/cp-kafka:5.3.1
@@ -65,7 +66,10 @@ spec:
             export VAULT_CACERT="/ca_cert.crt"
             export VAULT_ADDR="https://local-vault.default:8200"
             export VAULT_FORMAT="json"
-            vault login root_token
+            vault write auth/kubernetes/login \
+              role=local-kafka \
+              jwt=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) > /tmp/login.json
+            vault login $(cat /tmp/login.json | jq -r .auth.client_token) > /dev/null 2>&1
             vault write pki/issue/kafka-default \
               common_name=${HOSTNAME}.local-kafka.default > /certs/certs.json
             cat /certs/certs.json | jq -r .data.certificate > /certs/certificate.pem

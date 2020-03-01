@@ -37,7 +37,7 @@ cassandra-configmap-up:
 	-kubectl create configmap cassandra-config --from-file=cassandra/config/
 
 cassandra-configure-vault:
-	-kubectl apply -f cassandra/pki/configure-vault.yaml
+	-kubectl apply -f cassandra/vault/configure-vault.yaml
 
 cassandra-service-up:
 	-kubectl apply -f cassandra/service.yaml
@@ -54,7 +54,7 @@ cassandra-configmap-down:
 	-kubectl delete configmap cassandra-config
 
 cassandra-cleanup-configure-vault-job:
-	-kubectl delete -f cassandra/pki/configure-vault.yaml
+	-kubectl delete -f cassandra/vault/configure-vault.yaml
 
 cassandra-service-down:
 	-kubectl delete -f cassandra/service.yaml
@@ -85,13 +85,13 @@ zookeeper-statefulset-down:
 ## Zookeeper end
 
 ## Kafka
-kafka-up: kafka-configmap-up kafka-configure-pki kafka-service-up kafka-statefulset-up
+kafka-up: kafka-configmap-up kafka-service-account-up kafka-configure-vault kafka-service-up kafka-statefulset-up
 
 kafka-configmap-up:
 	-kubectl create configmap kafka-config --from-file=kafka/config/
 
-kafka-configure-pki:
-	-kubectl apply -f kafka/pki/configure-pki-job.yaml
+kafka-configure-vault:
+	-kubectl apply -f kafka/vault/configure-vault.yaml
 
 kafka-service-up:
 	-kubectl apply -f kafka/service.yaml
@@ -99,7 +99,10 @@ kafka-service-up:
 kafka-statefulset-up:
 	-kubectl apply -f kafka/statefulset.yaml
 
-kafka-down: kafka-service-down kafka-statefulset-down kafka-cleanup-configure-pki-job kafka-configmap-down
+kafka-service-account-up:
+	-kubectl apply -f kafka/service-account.yaml
+
+kafka-down: kafka-service-down kafka-statefulset-down kafka-cleanup-configure-vault-job kafka-service-account-down kafka-configmap-down
 
 kafka-configmap-down:
 	-kubectl delete configmap kafka-config
@@ -110,8 +113,11 @@ kafka-service-down:
 kafka-statefulset-down:
 	-kubectl delete -f kafka/statefulset.yaml
 
-kafka-cleanup-configure-pki-job:
-	-kubectl delete -f kafka/pki/configure-pki-job.yaml
+kafka-cleanup-configure-vault-job:
+	-kubectl delete -f kafka/vault/configure-vault.yaml
+
+kafka-service-account-down:
+	-kubectl delete -f kafka/service-account.yaml
 ## Kafka end
 
 ## Schema Registry
