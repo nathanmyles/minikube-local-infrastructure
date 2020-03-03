@@ -17,15 +17,14 @@ spec:
       containers:
         - name: local-schema-registry
           image: confluentinc/cp-schema-registry:5.3.1
+          command: [ "bash", "-c"]
+          args:
+            - |
+              cp /schema_registry_config/schema-registry.properties /etc/schema-registry/schema-registry.properties
+              schema-registry-start /etc/schema-registry/schema-registry.properties
           ports:
             - containerPort: 8081
           env:
-            - name: SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL
-              value: "local-zookeeper-0.local-zookeeper.default:2181"
-            - name: SCHEMA_REGISTRY_HOST_NAME
-              value: "local-schema-registry.default"
-            - name: SCHEMA_REGISTRY_LISTENERS
-              value: "http://0.0.0.0:8081"
             - name: SCHEMA_REGISTRY_DEBUG
               value: "true"
           readinessProbe:
@@ -34,3 +33,12 @@ spec:
               port: 8081
             initialDelaySeconds: 10
             timeoutSeconds: 5
+          volumeMounts:
+            - name: config-volume
+              mountPath: /schema_registry_config/
+      volumes:
+        - name: certs
+          emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: schema-registry-config

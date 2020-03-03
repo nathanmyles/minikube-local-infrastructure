@@ -4,16 +4,16 @@ start:
 stop:
 	minikube stop
 
-delete:
+delete-cluster:
 	minikube delete
 
-delete-persistent-volume:
+delete-persistent-volumes:
 	kubectl delete pvc --all
 	kubectl delete pv --all
 
 restart: down up
 
-restart-clean-data: down delete-persistent-volume up
+restart-clean-data: down delete-persistent-volumes up
 
 enable-private-repo:
 	./enter_regcreds.sh
@@ -121,7 +121,10 @@ kafka-service-account-down:
 ## Kafka end
 
 ## Schema Registry
-schema-registry-up: schema-registry-service-up schema-registry-deployment-up
+schema-registry-up: schema-registry-configmap-up schema-registry-service-up schema-registry-deployment-up
+
+schema-registry-configmap-up:
+	-kubectl create configmap schema-registry-config --from-file=schema-registry/config/
 
 schema-registry-service-up:
 	-kubectl apply -f schema-registry/service.yaml
@@ -129,7 +132,10 @@ schema-registry-service-up:
 schema-registry-deployment-up:
 	-kubectl apply -f schema-registry/deployment.yaml
 
-schema-registry-down: schema-registry-service-down schema-registry-deployment-down
+schema-registry-down: schema-registry-service-down schema-registry-deployment-down schema-registry-configmap-down
+
+schema-registry-configmap-down:
+	-kubectl delete configmap schema-registry-config
 
 schema-registry-service-down:
 	-kubectl delete -f schema-registry/service.yaml
