@@ -121,10 +121,13 @@ kafka-service-account-down:
 ## Kafka end
 
 ## Schema Registry
-schema-registry-up: schema-registry-configmap-up schema-registry-service-up schema-registry-deployment-up
+schema-registry-up: schema-registry-configmap-up schema-registry-service-account-up schema-registry-configure-vault schema-registry-service-up schema-registry-deployment-up
 
 schema-registry-configmap-up:
 	-kubectl create configmap schema-registry-config --from-file=schema-registry/config/
+
+schema-registry-configure-vault:
+	-kubectl apply -f schema-registry/vault/configure-vault.yaml
 
 schema-registry-service-up:
 	-kubectl apply -f schema-registry/service.yaml
@@ -132,7 +135,10 @@ schema-registry-service-up:
 schema-registry-deployment-up:
 	-kubectl apply -f schema-registry/deployment.yaml
 
-schema-registry-down: schema-registry-service-down schema-registry-deployment-down schema-registry-configmap-down
+schema-registry-service-account-up:
+	-kubectl apply -f schema-registry/service-account.yaml
+
+schema-registry-down: schema-registry-service-down schema-registry-deployment-down schema-registry-cleanup-configure-vault-job schema-registry-service-account-down schema-registry-configmap-down
 
 schema-registry-configmap-down:
 	-kubectl delete configmap schema-registry-config
@@ -142,6 +148,12 @@ schema-registry-service-down:
 
 schema-registry-deployment-down:
 	-kubectl delete -f schema-registry/deployment.yaml
+
+schema-registry-cleanup-configure-vault-job:
+	-kubectl delete -f schema-registry/vault/configure-vault.yaml
+
+schema-registry-service-account-down:
+	-kubectl delete -f schema-registry/service-account.yaml
 ## Schema Registry end
 
 ## Vault

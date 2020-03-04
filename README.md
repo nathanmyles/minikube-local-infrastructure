@@ -14,8 +14,9 @@ so you can deploy your services into the cluster for testing locally.
 - Kafka 
     - non-TLS URL: local-kafka-0.local-kafka.default:9092
     - TLS URL: local-kafka-0.local-kafka.default:9093
-- Schema Registry 
-    - URL: http://local-schema-registry.default:8081
+- Schema Registry
+    - non-TLS URL: http://local-schema-registry.default:8081
+    - TLS URL: https://local-schema-registry.default:8082
 - Vault 
     - non-TLS URL: http://local-vault.default:8300
     - TLS URL: https://local-vault.default:8200

@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: schema-registry-configure-vault
+spec:
+  template:
+    spec:
+      containers:
+        - name: schema-registry-configure-vault
+          image: nathanmyles/vault-client:1.0.0
+          command: ["/bin/sh"]
+          args:
+            - -ec
+            - |
+              curl http://local-vault.default/ca_cert.crt > /ca_cert.crt
+              export VAULT_CACERT="/ca_cert.crt"
+              export VAULT_ADDR="https://local-vault.default:8200"
+              vault login root_token
+              cat >> policy.hcl <<EOF
+                path "pki/issue/schema-registry-default" {
+                  capabilities = ["create", "update"]
+                }
+              EOF
+              vault policy write local-schema-registry policy.hcl
+              vault write auth/kubernetes/role/local-schema-registry \
+                bound_service_account_names=local-schema-registry \
+                bound_service_account_namespaces=default \
+                policies=default,local-schema-registry \
+                ttl=1h
+              vault write pki/roles/schema-registry-default \
+                  allowed_domains=local-schema-registry.default \
+                  allow_bare_domains=true \
+                  allow_subdomains=true \
+                  max_ttl=72h
+      restartPolicy: Never
