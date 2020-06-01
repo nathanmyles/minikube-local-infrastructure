@@ -43,6 +43,25 @@ spec:
           capabilities:
             add:
               - IPC_LOCK
+        livenessProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - |
+                if openssl x509 -checkend 86400 -noout -in /etc/kafka/secrets/certificate.pem
+                then
+                  exit 0
+                else
+                  cp /etc/kafka/secrets/next_certificate.pem /etc/kafka/secrets/certificate.pem
+                  cp /etc/kafka/secrets/next_truststore.jks /etc/kafka/secrets/kafka.server.truststore.jks
+                  cp /etc/kafka/secrets/next_keystore.jks /etc/kafka/secrets/kafka.server.keystore.jks
+                  exit 1
+                fi
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          periodSeconds: 300
+          failureThreshold: 1
         readinessProbe:
           tcpSocket:
             port: 9092
@@ -55,9 +74,74 @@ spec:
           mountPath: /etc/kafka/secrets
         - name: config-volume
           mountPath: /kafka_config/
+      - name: renew-certs
+        image: nathanmyles/vault-client-java:1.0.0
+        command: ["/bin/sh"]
+        args:
+          - -ec
+          - |
+            while true;
+            do
+            sleep 3600
+            if openssl x509 -checkend 90000 -noout -in /certs/certificate.pem
+            then
+             echo "####### Certs Valid, Sleeping... #######\n"
+             continue
+            fi
+            rm -f /certs/inprogress_truststore.jks
+            rm -f /certs/inprogress_keystore.jks
+            curl http://local-vault.default/ca_cert.crt > /ca_cert.crt
+            export VAULT_CACERT="/ca_cert.crt"
+            export VAULT_ADDR="https://local-vault.default:8200"
+            export VAULT_FORMAT="json"
+            vault write auth/kubernetes/login \
+              role=local-kafka \
+              jwt=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) > /tmp/login.json
+            vault login $(cat /tmp/login.json | jq -r .auth.client_token) > /dev/null 2>&1
+            vault write pki/issue/kafka-default \
+              common_name=${HOSTNAME}.local-kafka.default > /certs/certs.json
+            cat /certs/certs.json | jq -r .data.certificate > /certs/next_certificate.pem
+            cat /certs/certs.json | jq -r .data.issuing_ca > /certs/next_issuing_ca.pem
+            cat /certs/certs.json | jq -r .data.private_key > /certs/next_private_key.pem
+            openssl pkcs12 -export -out /certs/next_private_key.pkcs12 -in /certs/next_certificate.pem -inkey /certs/next_private_key.pem -passin pass: -passout pass:abcdef
+            keytool -genkey -keyalg RSA -alias endeca -keystore /certs/inprogress_truststore.jks -storepass abcdef <<EOF
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            yes
+            yes
+            EOF
+            keytool -delete -alias endeca -keystore /certs/inprogress_truststore.jks -storepass abcdef
+            keytool -import -v -trustcacerts -alias endeca-ca -file /certs/next_issuing_ca.pem -keystore /certs/inprogress_truststore.jks -storepass abcdef <<EOF
+            yes
+            EOF
+            keytool -genkey -keyalg RSA -alias endeca -keystore /certs/inprogress_keystore.jks -storepass abcdef<<EOF
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            Unknown
+            yes
+            yes
+            EOF
+            keytool -delete -alias endeca -keystore /certs/inprogress_keystore.jks -storepass abcdef
+            keytool -v -importkeystore -srckeystore /certs/next_private_key.pkcs12 -srcstoretype PKCS12 -destkeystore /certs/inprogress_keystore.jks -deststoretype JKS -storepass abcdef --srcstorepass abcdef <<EOF
+            yes
+            EOF
+            cp /certs/inprogress_truststore.jks /certs/next_truststore.jks
+            cp /certs/inprogress_keystore.jks /certs/next_keystore.jks
+            echo "\n####### Certs Renewed #######\n"
+            done
+        volumeMounts:
+          - name: certs
+            mountPath: "/certs"
       initContainers:
       - name: fetch-certs
-        image: nathanmyles/vault-client:1.0.0
+        image: nathanmyles/vault-client-java:1.0.0
         command: ["/bin/sh"]
         args:
           - -ec
@@ -78,15 +162,6 @@ spec:
             echo "abcdef" > /certs/keystore_password
             echo "abcdef" > /certs/key_password
             echo "abcdef" > /certs/truststore_password
-        volumeMounts:
-          - name: certs
-            mountPath: "/certs"
-      - name: format-certs
-        image: openjdk:8-jre-stretch
-        command: ["/bin/sh"]
-        args:
-          - -ec
-          - |
             openssl pkcs12 -export -out /certs/private_key.pkcs12 -in /certs/certificate.pem -inkey /certs/private_key.pem -passin pass: -passout pass:abcdef
             keytool -genkey -keyalg RSA -alias endeca -keystore /certs/kafka.server.truststore.jks -storepass abcdef <<EOF
             Unknown
