@@ -40,6 +40,25 @@ spec:
             capabilities:
               add:
                 - IPC_LOCK
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  if [ -f "/var/lib/vault/certs/next_certificate.crt" ];
+                  then
+                    mv /var/lib/vault/certs/next_certificate.crt /var/lib/vault/certs/certificate.crt
+                    mv /var/lib/vault/certs/next_issuing_ca.crt /var/lib/vault/certs/ca_cert.crt
+                    mv /var/lib/vault/certs/next_private_key.key /var/lib/vault/certs/private_key.key
+                    exit 1
+                  else
+                    exit 0
+                  fi
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            periodSeconds: 300
+            failureThreshold: 1
           readinessProbe:
             # Check status; unsealed vault servers return 0
             # The exit code reflects the seal status:
@@ -72,6 +91,30 @@ spec:
           volumeMounts:
           - name: certs
             mountPath: /usr/share/nginx/
+        - name: renew-certs
+          image: nathanmyles/vault-client:1.0.0
+          command: ["/bin/sh"]
+          args:
+            - -ec
+            - |
+              while true;
+              do
+              sleep 86400
+              export VAULT_CACERT="/certs/ca_cert.crt"
+              export VAULT_ADDR="https://local-vault.default:8200"
+              export VAULT_FORMAT="json"
+              vault login root_token > /dev/null
+              vault write pki/issue/vault-default \
+                common_name=${HOSTNAME}.local-vault.default \
+                alt_names=local-vault.default > /certs/certs.json
+              cat /certs/certs.json | jq -r .data.certificate > /certs/next_certificate.crt
+              cat /certs/certs.json | jq -r .data.issuing_ca > /certs/next_issuing_ca.crt
+              cat /certs/certs.json | jq -r .data.private_key > /certs/next_private_key.key
+              echo "####### Certs Renewed #######"
+              done
+          volumeMounts:
+            - name: certs
+              mountPath: "/certs"
       initContainers:
         - name: configure-pki
           image:  nathanmyles/vault-client:1.0.0
@@ -114,7 +157,6 @@ spec:
                 common_name=${HOSTNAME}.local-vault.default \
                 alt_names=local-vault.default > /var/lib/vault/certs/certs.json
               cat /var/lib/vault/certs/certs.json | jq -r .data.certificate > /var/lib/vault/certs/certificate.crt
-              cat /var/lib/vault/certs/certs.json | jq -r .data.issuing_ca >> /var/lib/vault/certs/certificate.crt
               cat /var/lib/vault/certs/certs.json | jq -r .data.issuing_ca > /var/lib/vault/certs/ca_cert.crt
               cat /var/lib/vault/certs/certs.json | jq -r .data.private_key > /var/lib/vault/certs/private_key.key
               mkdir /var/lib/vault/certs/html
