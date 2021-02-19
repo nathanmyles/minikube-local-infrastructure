@@ -7,9 +7,6 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-    - port: 8081
-      name: client
-    - port: 8082
-      name: tls-client
+  - port: 8081
   selector:
     app: local-schema-registry
