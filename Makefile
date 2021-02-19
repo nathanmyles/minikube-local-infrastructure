@@ -1,5 +1,5 @@
 start:
-	minikube start --memory 8192 --cpus=4
+	minikube start --memory=16384 --cpus=4
 
 stop:
 	minikube stop
@@ -30,14 +30,34 @@ storage-down:
 	-kubectl delete -f storage/storage.yaml
 ## Storage end
 
+## Istio
+istio-up: istio-create-namespace istio-operator-init istio-operator-up istio-injection-default
+
+istio-create-namespace:
+	-kubectl create namespace istio-system
+
+istio-operator-init:
+	-istioctl operator init
+
+istio-operator-up:
+	-kubectl apply -f istio/operator.yaml
+
+istio-injection-default:
+	-kubectl label namespace default istio-injection=enabled
+
+istio-policy-up:
+	-kubectl apply -f istio/policy.yaml
+
+istio-destinationrule-up:
+	-kubectl apply -f istio/destinationrule.yaml
+
+## Istio end
+
 ## Cassandra
-cassandra-up: cassandra-configmap-up cassandra-service-account-up cassandra-configure-vault cassandra-service-up cassandra-statefulset-up
+cassandra-up: cassandra-configmap-up cassandra-service-account-up cassandra-service-up cassandra-statefulset-up
 
 cassandra-configmap-up:
 	-kubectl create configmap cassandra-config --from-file=cassandra/config/
-
-cassandra-configure-vault:
-	-kubectl apply -f cassandra/vault/configure-vault.yaml
 
 cassandra-service-up:
 	-kubectl apply -f cassandra/service.yaml
@@ -48,13 +68,10 @@ cassandra-statefulset-up:
 cassandra-service-account-up:
 	-kubectl apply -f cassandra/service-account.yaml
 
-cassandra-down: cassandra-service-down cassandra-statefulset-down cassandra-service-account-down cassandra-configmap-down cassandra-cleanup-configure-vault-job
+cassandra-down: cassandra-service-down cassandra-statefulset-down cassandra-service-account-down cassandra-configmap-down
 
 cassandra-configmap-down:
 	-kubectl delete configmap cassandra-config
-
-cassandra-cleanup-configure-vault-job:
-	-kubectl delete -f cassandra/vault/configure-vault.yaml
 
 cassandra-service-down:
 	-kubectl delete -f cassandra/service.yaml
@@ -85,13 +102,10 @@ zookeeper-statefulset-down:
 ## Zookeeper end
 
 ## Kafka
-kafka-up: kafka-configmap-up kafka-service-account-up kafka-configure-vault kafka-service-up kafka-statefulset-up
+kafka-up: kafka-configmap-up kafka-service-account-up kafka-service-up kafka-statefulset-up
 
 kafka-configmap-up:
 	-kubectl create configmap kafka-config --from-file=kafka/config/
-
-kafka-configure-vault:
-	-kubectl apply -f kafka/vault/configure-vault.yaml
 
 kafka-service-up:
 	-kubectl apply -f kafka/service.yaml
@@ -102,7 +116,7 @@ kafka-statefulset-up:
 kafka-service-account-up:
 	-kubectl apply -f kafka/service-account.yaml
 
-kafka-down: kafka-service-down kafka-statefulset-down kafka-cleanup-configure-vault-job kafka-service-account-down kafka-configmap-down
+kafka-down: kafka-service-down kafka-statefulset-down kafka-service-account-down kafka-configmap-down
 
 kafka-configmap-down:
 	-kubectl delete configmap kafka-config
@@ -113,21 +127,15 @@ kafka-service-down:
 kafka-statefulset-down:
 	-kubectl delete -f kafka/statefulset.yaml
 
-kafka-cleanup-configure-vault-job:
-	-kubectl delete -f kafka/vault/configure-vault.yaml
-
 kafka-service-account-down:
 	-kubectl delete -f kafka/service-account.yaml
 ## Kafka end
 
 ## Schema Registry
-schema-registry-up: schema-registry-configmap-up schema-registry-service-account-up schema-registry-configure-vault schema-registry-service-up schema-registry-deployment-up
+schema-registry-up: schema-registry-configmap-up schema-registry-service-account-up schema-registry-service-up schema-registry-deployment-up
 
 schema-registry-configmap-up:
 	-kubectl create configmap schema-registry-config --from-file=schema-registry/config/
-
-schema-registry-configure-vault:
-	-kubectl apply -f schema-registry/vault/configure-vault.yaml
 
 schema-registry-service-up:
 	-kubectl apply -f schema-registry/service.yaml
@@ -138,7 +146,7 @@ schema-registry-deployment-up:
 schema-registry-service-account-up:
 	-kubectl apply -f schema-registry/service-account.yaml
 
-schema-registry-down: schema-registry-service-down schema-registry-deployment-down schema-registry-cleanup-configure-vault-job schema-registry-service-account-down schema-registry-configmap-down
+schema-registry-down: schema-registry-service-down schema-registry-deployment-down schema-registry-service-account-down schema-registry-configmap-down
 
 schema-registry-configmap-down:
 	-kubectl delete configmap schema-registry-config
@@ -148,9 +156,6 @@ schema-registry-service-down:
 
 schema-registry-deployment-down:
 	-kubectl delete -f schema-registry/deployment.yaml
-
-schema-registry-cleanup-configure-vault-job:
-	-kubectl delete -f schema-registry/vault/configure-vault.yaml
 
 schema-registry-service-account-down:
 	-kubectl delete -f schema-registry/service-account.yaml

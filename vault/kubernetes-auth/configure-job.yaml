@@ -17,9 +17,7 @@ spec:
                 echo "waiting for configuration..."
                 sleep 5
               done
-              curl http://local-vault.default/ca_cert.crt > /ca_cert.crt
-              export VAULT_CACERT="/ca_cert.crt"
-              export VAULT_ADDR="https://local-vault.default:8200"
+              export VAULT_ADDR="http://local-vault.default:8200"
               vault login root_token
               vault secrets enable -version=2  -path=kv kv
               vault auth enable kubernetes
@@ -43,4 +41,4 @@ spec:
                 configMapKeyRef:
                   name: kubernetes-auth-config
                   key: ca.crt
-      restartPolicy: Never
+      restartPolicy: OnFailure

@@ -9,7 +9,5 @@ spec:
   ports:
   - port: 9092
     name: client
-  - port: 9093
-    name: tls-client
   selector:
     app: local-kafka

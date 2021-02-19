@@ -9,7 +9,5 @@ spec:
   ports:
   - name: cql
     port: 9042
-  - name: tls-cql
-    port: 9142
   selector:
     app: local-cassandra
