@@ -1,13 +1,15 @@
 # minikube-local-infrastructure
 
 Base infrastructure project for kubernetes. Can be used for local development when 
-working in a kubernetes environment. Allows you to stand up infrastructure components 
+working in a kubernetes environment. Allows you to stand up infrastructure components, 
 so you can deploy your services into the cluster for testing locally.
 
 ## Support Services
 
 - Cassandra 
     - URL: local-cassandra-0.local-cassandra.default:9042
+-MySQL
+    - URL: local-mysql-0.local-mysql.default:3306
 - Zookeeper 
     - URL: local-zookeeper-0.local-zookeeper.default:2181
 - Kafka 
@@ -53,9 +55,9 @@ You need to run it in each shell you are building containers in.
 
 Use this command: `make enable-private-repo`
 
-Minikube supports pulling images from several different container registries. If you are pulling 
-from an unsupported registry, then you can use the `make enable-private-repo` command to allow 
-minikube to pull images from it. This will registry a kubernetes secret that you can pull in your
+Minikube supports pulling images from several container registries. If you are pulling from an 
+unsupported registry, then you can use the `make enable-private-repo` command to allow minikube 
+to pull images from it. This will registry a kubernetes secret that you can pull in your 
 manifests to allow access to your private registry.
 
 Example of using the secret in a manifest:

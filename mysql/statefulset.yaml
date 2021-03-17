@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: local-mysql
+  labels:
+    app: local-mysql
+spec:
+  serviceName: local-mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-mysql
+  template:
+    metadata:
+      labels:
+        app: local-mysql
+    spec:
+      serviceAccountName: local-mysql
+      containers:
+        - name: local-mysql
+          image: mysql:5.6
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3306
+              name: mysql
+          env:
+            # Use secret in real usage
+            - name: MYSQL_ROOT_PASSWORD
+              value: password
+          livenessProbe:
+            exec:
+              command:
+              - mysqladmin
+              - ping
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              # Check we can execute queries over TCP (skip-networking is off).
+              command:
+              - mysql
+              - -h
+              - 127.0.0.1
+              - -e
+              - "SELECT 1"
+              - --password=password
+            initialDelaySeconds: 5
+            periodSeconds: 2
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: fast
+        resources:
+          requests:
+            storage: 1Gi

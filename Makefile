@@ -18,9 +18,9 @@ restart-clean-data: down delete-persistent-volumes up
 enable-private-repo:
 	./enter_regcreds.sh
 
-up: storage-up vault-up cassandra-up zookeeper-up kafka-up schema-registry-up elasticsearch-up
+up: storage-up vault-up cassandra-up mysql-up zookeeper-up kafka-up schema-registry-up elasticsearch-up
 
-down: elasticsearch-down schema-registry-down kafka-down zookeeper-down cassandra-down vault-down storage-down
+down: elasticsearch-down schema-registry-down kafka-down zookeeper-down mysql-down cassandra-down vault-down storage-down
 
 ## Storage
 storage-up:
@@ -59,6 +59,30 @@ cassandra-statefulset-down:
 cassandra-service-account-down:
 	-kubectl delete -f cassandra/service-account.yaml
 ## Cassandra end
+
+## MySQL
+mysql-up: mysql-service-account-up mysql-service-up mysql-statefulset-up
+
+mysql-service-up:
+	-kubectl apply -f mysql/service.yaml
+
+mysql-statefulset-up:
+	-kubectl apply -f mysql/statefulset.yaml
+
+mysql-service-account-up:
+	-kubectl apply -f mysql/service-account.yaml
+
+mysql-down: mysql-service-down mysql-statefulset-down mysql-service-account-down
+
+mysql-service-down:
+	-kubectl delete -f mysql/service.yaml
+
+mysql-statefulset-down:
+	-kubectl delete -f mysql/statefulset.yaml
+
+mysql-service-account-down:
+	-kubectl delete -f mysql/service-account.yaml
+## MySQL end
 
 ## Zookeeper
 zookeeper-up: zookeeper-service-up zookeeper-statefulset-up
