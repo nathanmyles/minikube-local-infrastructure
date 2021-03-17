@@ -595,7 +595,7 @@ storage_port: 7000
 # SSL port, for encrypted communication.  Unused unless enabled in
 # encryption_options
 # For security reasons, you should not expose this port to the internet.  Firewall it if needed.
-ssl_storage_port: 7001
+# ssl_storage_port: 7001
 
 # Address or interface to bind to and tell other Cassandra nodes to connect to.
 # You _must_ change this if you want multiple nodes to be able to communicate!
@@ -651,7 +651,7 @@ native_transport_port: 9042
 # for native_transport_port. Setting native_transport_port_ssl to a different value
 # from native_transport_port will use encryption for native_transport_port_ssl while
 # keeping native_transport_port unencrypted.
-native_transport_port_ssl: 9142
+# native_transport_port_ssl: 9142
 # The maximum threads for handling requests when the native transport is used.
 # This is similar to rpc_max_threads though the default differs slightly (and
 # there is no native_transport_min_threads, idle threads will always be stopped
@@ -1041,12 +1041,12 @@ request_scheduler: org.apache.cassandra.scheduler.NoScheduler
 # the keystore and truststore.  For instructions on generating these files, see:
 # http://download.oracle.com/javase/6/docs/technotes/guides/security/jsse/JSSERefGuide.html#CreateKeystore
 #
-server_encryption_options:
-  internode_encryption: all
-  keystore: /usr/local/lib/cassandra/conf/keystore.jks
-  keystore_password: abcdef
-  truststore: /usr/local/lib/cassandra/conf/truststore.jks
-  truststore_password: abcdef
+#server_encryption_options:
+#  internode_encryption: all
+#  keystore: /usr/local/lib/cassandra/conf/keystore.jks
+#  keystore_password: abcdef
+#  truststore: /usr/local/lib/cassandra/conf/truststore.jks
+#  truststore_password: abcdef
   # More advanced defaults below:
   # protocol: TLS
   # algorithm: SunX509
@@ -1057,15 +1057,15 @@ server_encryption_options:
 
 # enable or disable client/server encryption.
 client_encryption_options:
-  enabled: true
+  enabled: false
   # If enabled and optional is set to true encrypted and unencrypted connections are handled.
-  optional: true
-  keystore: /usr/local/lib/cassandra/conf/keystore.jks
-  keystore_password: abcdef
-  require_client_auth: true
+#  optional: true
+#  keystore: /usr/local/lib/cassandra/conf/keystore.jks
+#  keystore_password: abcdef
+#  require_client_auth: true
   # Set trustore and truststore_password if require_client_auth is true
-  truststore: /usr/local/lib/cassandra/conf/truststore.jks
-  truststore_password: abcdef
+#  truststore: /usr/local/lib/cassandra/conf/truststore.jks
+#  truststore_password: abcdef
   # More advanced defaults below:
   # protocol: TLS
   # algorithm: SunX509

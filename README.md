@@ -7,8 +7,7 @@ so you can deploy your services into the cluster for testing locally.
 ## Support Services
 
 - Cassandra 
-    - non-TLS URL: local-cassandra-0.local-cassandra.default:9042
-    - TLS URL: local-cassandra-0.local-cassandra.default:9142
+    - URL: local-cassandra-0.local-cassandra.default:9042
 - Zookeeper 
     - URL: local-zookeeper-0.local-zookeeper.default:2181
 - Kafka 
@@ -45,7 +44,7 @@ More commands in the [Makefile](Makefile)
 
 ## Export minikube docker environment
 
-Use this command: `eval $(minikube docker-env)`
+Use this command: `eval $(minikube -p minikube docker-env)`
 
 This will allow minikube to have access to the images you build by using it's docker instance.
 You need to run it in each shell you are building containers in.

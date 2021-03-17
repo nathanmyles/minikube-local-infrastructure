@@ -1,5 +1,5 @@
 start:
-	minikube start --memory 8192 --cpus=4
+	minikube start --memory 16384 --cpus=4 --driver=hyperkit
 
 stop:
 	minikube stop
@@ -31,13 +31,10 @@ storage-down:
 ## Storage end
 
 ## Cassandra
-cassandra-up: cassandra-configmap-up cassandra-service-account-up cassandra-configure-vault cassandra-service-up cassandra-statefulset-up
+cassandra-up: cassandra-configmap-up cassandra-service-account-up cassandra-service-up cassandra-statefulset-up
 
 cassandra-configmap-up:
 	-kubectl create configmap cassandra-config --from-file=cassandra/config/
-
-cassandra-configure-vault:
-	-kubectl apply -f cassandra/pki/configure-vault.yaml
 
 cassandra-service-up:
 	-kubectl apply -f cassandra/service.yaml
@@ -48,13 +45,10 @@ cassandra-statefulset-up:
 cassandra-service-account-up:
 	-kubectl apply -f cassandra/service-account.yaml
 
-cassandra-down: cassandra-service-down cassandra-statefulset-down cassandra-service-account-down cassandra-configmap-down cassandra-cleanup-configure-vault-job
+cassandra-down: cassandra-service-down cassandra-statefulset-down cassandra-service-account-down cassandra-configmap-down
 
 cassandra-configmap-down:
 	-kubectl delete configmap cassandra-config
-
-cassandra-cleanup-configure-vault-job:
-	-kubectl delete -f cassandra/pki/configure-vault.yaml
 
 cassandra-service-down:
 	-kubectl delete -f cassandra/service.yaml
@@ -85,10 +79,7 @@ zookeeper-statefulset-down:
 ## Zookeeper end
 
 ## Kafka
-kafka-up: kafka-configure-pki kafka-service-up kafka-statefulset-up
-
-kafka-configure-pki:
-	-kubectl apply -f kafka/pki/configure-pki-job.yaml
+kafka-up: kafka-service-up kafka-statefulset-up
 
 kafka-service-up:
 	-kubectl apply -f kafka/service.yaml
@@ -96,7 +87,7 @@ kafka-service-up:
 kafka-statefulset-up:
 	-kubectl apply -f kafka/statefulset.yaml
 
-kafka-down: kafka-service-down kafka-statefulset-down kafka-cleanup-configure-pki-job
+kafka-down: kafka-service-down kafka-statefulset-down
 
 kafka-service-down:
 	-kubectl delete -f kafka/service.yaml
@@ -104,8 +95,6 @@ kafka-service-down:
 kafka-statefulset-down:
 	-kubectl delete -f kafka/statefulset.yaml
 
-kafka-cleanup-configure-pki-job:
-	-kubectl delete -f kafka/pki/configure-pki-job.yaml
 ## Kafka end
 
 ## Schema Registry
